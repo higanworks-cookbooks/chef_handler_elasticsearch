@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+#^syntax detection
+
+site 'http://community.opscode.com/api/v1'
+
+cookbook 'chef_handler_elasticsearch', :path => './'
+cookbook 'dummy_cookbook', :path => './test/cookbooks/dummy_cookbook'
+

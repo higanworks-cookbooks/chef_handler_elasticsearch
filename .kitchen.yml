@@ -1,0 +1,24 @@
+---
+driver_plugin: vagrant
+driver_config:
+  require_chef_omnibus: true
+
+platforms:
+- name: ubuntu-14.04
+  driver_config:
+    box: opscode-ubuntu-14.04
+    box_url: http://opscode-vm-bento.s3.amazonaws.com/vagrant/virtualbox/opscode_ubuntu-14.04_chef-provisionerless.box
+
+suites:
+- name: success
+  run_list:
+    - recipe[chef_handler_elasticsearch]
+    - recipe[dummy_cookbook::success]
+  attributes:
+    chef_handler_elasticsearch:
+      url: http://localhost:9200
+- name: failure
+  run_list:
+    - recipe[simplelog_handler]
+    - recipe[dummy_cookbook::fail]
+  attributes: {}

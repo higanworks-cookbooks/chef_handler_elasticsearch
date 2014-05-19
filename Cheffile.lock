@@ -1,0 +1,14 @@
+PATH
+  remote: ./
+  specs:
+    chef_handler_elasticsearch (1.0.0)
+
+PATH
+  remote: ./test/cookbooks/dummy_cookbook
+  specs:
+    dummy_cookbook (0.1.0)
+
+DEPENDENCIES
+  chef_handler_elasticsearch (>= 0)
+  dummy_cookbook (>= 0)
+
