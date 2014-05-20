@@ -62,7 +62,7 @@ class Chef::Handler::Elasticsearch < ::Chef::Handler
       Chef::Log.debug res.to_s
       Chef::Log.info "== Chef::Handler::Elasticsearch request_id: #{JSON.parse(res)['_id']}"
     rescue => e
-      Chef::Log.warn "== #{e.class}: Status report could not put to Elasticsearch."
+      Chef::Log.error "== #{e.class}: Status report could not put to Elasticsearch."
     end
   end
 
@@ -82,6 +82,9 @@ class Chef::Handler::Elasticsearch < ::Chef::Handler
     rescue Net::HTTPServerException
       put_template(client)
       return
+    rescue => e
+      Chef::Log.error "== #{e.class}: Status report could not put to Elasticsearch."
+      raise e.class, e.message
     end
 
     unless JSON.parse(@config[:mappings]) == JSON.parse(res)["#{@config[:prefix]}_template"]["mappings"]
@@ -97,7 +100,7 @@ class Chef::Handler::Elasticsearch < ::Chef::Handler
       }
     rescue => e
       Chef::Log.warn "== #{e.class}: mapping template could not put to Elasticsearch. Exiting..."
-      raise e.message, e.class
+      raise e.class, e.message
     end
   end
 
