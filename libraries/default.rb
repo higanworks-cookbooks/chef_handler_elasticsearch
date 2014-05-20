@@ -13,7 +13,7 @@ class Chef::Handler::Elasticsearch < ::Chef::Handler
     @default = {
       url: 'http://localhost:9200',
       timeout: 3,
-      prefix: 'logstash',
+      prefix: 'chef_handler',
       prepare_template: true,
       template_order: 10,
       index_use_utc: true,
