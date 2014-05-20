@@ -5,6 +5,7 @@
 #
 
 class Chef::Handler::Elasticsearch < ::Chef::Handler
+  require 'timeout'
   attr_reader :opts, :config
 
   def initialize(opts = {})
@@ -13,12 +14,23 @@ class Chef::Handler::Elasticsearch < ::Chef::Handler
       url: 'http://localhost:9200',
       timeout: 3,
       prefix: 'logstash',
-      type: 'chef',
+      prepare_template: true,
+      template_order: 10,
       index_use_utc: true,
-      index_date_format: "%Y.%m.%d"
+      index_date_format: "%Y.%m.%d",
+      mappings: default_mapping
     }
     @opts = opts
     @opts
+  end
+
+  def default_mapping
+'{
+  "_default_" : {
+    "numeric_detection" : true,
+    "dynamic_date_formats" : ["yyyy-MM-dd HH:mm:ss Z", "date_optional_time"]
+  }
+}'
   end
 
   def report
@@ -35,19 +47,20 @@ class Chef::Handler::Elasticsearch < ::Chef::Handler
       type = 'success'
     end
 
+    prepare_template(client) if @config[:prepare_template]
+
     body = data.merge({'@timestamp' => Time.at(data[:end_time]).to_datetime.to_s})
 
     Chef::Log.debug "===== Puts to es following..."
     Chef::Log.debug body.to_s
 
     begin
-      require 'timeout'
       res = timeout(@config[:timeout]) {
-        client.put([index, type, SecureRandom.uuid].join('/'), body.to_json)
+        client.put([index, type, Chef::RequestID.instance.request_id].join('/'), body.to_json)
       }
       Chef::Log.debug "===== Response from es following..."
       Chef::Log.debug res.to_s
-      Chef::Log.info "== Chef::Handler::Elasticsearch id: #{JSON.parse(res)['_id']}"
+      Chef::Log.info "== Chef::Handler::Elasticsearch request_id: #{JSON.parse(res)['_id']}"
     rescue => e
       Chef::Log.warn "== #{e.class}: Status report could not put to Elasticsearch."
     end
@@ -59,5 +72,42 @@ class Chef::Handler::Elasticsearch < ::Chef::Handler
     else
       Time.at(data[:end_time]).strftime(@config[:index_date_format])
     end
+  end
+
+  def prepare_template(client)
+    begin
+      res = timeout(@config[:timeout]) {
+        client.get("/_template/#{@config[:prefix]}_template")
+      }
+    rescue Net::HTTPServerException
+      put_template(client)
+      return
+    end
+
+    unless JSON.parse(@config[:mappings]) == JSON.parse(res)["#{@config[:prefix]}_template"]["mappings"]
+      put_template(client)
+    end
+  end
+
+  def put_template(client)
+    begin
+      Chef::Log.info "== create mapping template to Elasticsearch."
+      res = timeout(@config[:timeout]) {
+        client.put("/_template/#{@config[:prefix]}_template", build_template_body)
+      }
+    rescue => e
+      Chef::Log.warn "== #{e.class}: mapping template could not put to Elasticsearch. Exiting..."
+      raise e.message, e.class
+    end
+  end
+
+  def build_template_body
+    body = Hash.new
+    body["template"] = "#{@config[:prefix]}-*"
+    body["order"] = @config[:template_order]
+    body["mappings"] = JSON.parse(@config[:mappings])
+    Chef::Log.debug "===== Template for index following..."
+    Chef::Log.debug body.to_json
+    body.to_json
   end
 end

@@ -19,6 +19,6 @@ suites:
       url: http://localhost:9200
 - name: failure
   run_list:
-    - recipe[simplelog_handler]
+    - recipe[chef_handler_elasticsearch]
     - recipe[dummy_cookbook::fail]
   attributes: {}
