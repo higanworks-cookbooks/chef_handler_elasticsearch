@@ -4,6 +4,10 @@
 # Copyright 2014, HiganWorks LLC.
 #
 
+if not defined? Chef::RequestID
+  require 'securerandom'
+end
+
 class Chef::Handler::Elasticsearch < ::Chef::Handler
   require 'timeout'
   attr_reader :opts, :config
@@ -56,7 +60,11 @@ class Chef::Handler::Elasticsearch < ::Chef::Handler
 
     begin
       res = timeout(@config[:timeout]) {
-        client.put([index, type, Chef::RequestID.instance.request_id].join('/'), body.to_json)
+        if defined? Chef::RequestID.instance.request_id
+          client.put([index, type, Chef::RequestID.instance.request_id].join('/'), body.to_json)
+        else
+          client.put([index, type, SecureRandom.uuid].join('/'), body.to_json)
+        end
       }
       Chef::Log.debug "===== Response from es following..."
       Chef::Log.debug res.to_s
