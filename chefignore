@@ -3,3 +3,4 @@
 .kitchen.local.yml
 .librarian/
 test/
+chef_handler_elasticsearch/.kitchen.local.yml
