@@ -37,6 +37,9 @@ Attributes
 - node[:chef_handler_elasticsearch][:index_use_utc]
   - Use utc to index name.
   - default: `true`
+- node[:chef_handler_elasticsearch][:delete_keys]
+  - Delete some keys from report data before sending to Elasticsearch. Useful for deleting all_resources, updated_resources, node details, etc.
+  - default: [] (Don't delete)
 
 
 ### elasticsearch template settings.

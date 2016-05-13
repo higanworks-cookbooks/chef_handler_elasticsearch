@@ -22,6 +22,7 @@ class Chef::Handler::Elasticsearch < ::Chef::Handler
       template_order: 10,
       index_use_utc: true,
       index_date_format: "%Y.%m.%d",
+      delete_keys: [],
       mappings: default_mapping
     }
     @opts = opts
@@ -54,6 +55,10 @@ class Chef::Handler::Elasticsearch < ::Chef::Handler
     prepare_template(client) if @config[:prepare_template]
 
     body = data.merge({'@timestamp' => Time.at(data[:end_time]).to_datetime.to_s})
+
+    @config[:delete_keys].each do |key|
+      body.tap { |h| h.delete(key.to_sym) }
+    end
 
     Chef::Log.debug "===== Puts to es following..."
     Chef::Log.debug body.to_s

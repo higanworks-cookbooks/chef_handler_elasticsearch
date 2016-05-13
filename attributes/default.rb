@@ -13,3 +13,4 @@ default[:chef_handler_elasticsearch][:mappings] = '{
     "dynamic_date_formats" : ["yyyy-MM-dd HH:mm:ss Z", "date_optional_time"]
   }
 }'
+default[:chef_handler_elasticsearch][:delete_keys] = []
