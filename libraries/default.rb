@@ -4,6 +4,8 @@
 # Copyright 2014, HiganWorks LLC.
 #
 
+require 'chef/handler'
+
 if not defined? Chef::RequestID
   require 'securerandom'
 end
